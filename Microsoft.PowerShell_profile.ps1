@@ -19,6 +19,19 @@ if (Get-Module -ListAvailable -Name PSReadLine) {
 }
 #endregion
 
+#region Java
+# Troca a versao do JDK na sessao actual: Use-Java 21
+function Use-Java($Version) {
+    $jdk = Get-ChildItem 'C:\Program Files\Eclipse Adoptium' -Directory -Filter "jdk-$Version*" -ErrorAction SilentlyContinue |
+           Sort-Object Name -Descending | Select-Object -First 1
+    if (-not $jdk) { Write-Warning "JDK $Version nao encontrado em C:\Program Files\Eclipse Adoptium"; return }
+    $env:JAVA_HOME = $jdk.FullName
+    # tira do PATH o JDK anterior, senao acumulam-se e o primeiro e que ganha
+    $env:PATH = "$env:JAVA_HOME\bin;" + (($env:PATH -split ';' | Where-Object { $_ -notlike '*Eclipse Adoptium*' }) -join ';')
+    java -version
+}
+#endregion
+
 #region Aliases uteis
 Set-Alias -Name ll -Value Get-ChildItem
 function which ($command) { Get-Command $command | Select-Object -ExpandProperty Source }
