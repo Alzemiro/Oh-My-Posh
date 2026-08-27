@@ -1,0 +1,23 @@
+{
+    "name": "Cyberpunk Neon",
+    "background": "#0D0221",
+    "foreground": "#EAEAEA",
+    "cursorColor": "#05D9E8",
+    "selectionBackground": "#D300C5",
+    "black": "#0D0221",
+    "red": "#FF2A6D",
+    "green": "#00F593",
+    "yellow": "#F9F002",
+    "blue": "#5A189A",
+    "purple": "#D300C5",
+    "cyan": "#05D9E8",
+    "white": "#EAEAEA",
+    "brightBlack": "#4B4453",
+    "brightRed": "#FF5277",
+    "brightGreen": "#3DFFB3",
+    "brightYellow": "#FFF94D",
+    "brightBlue": "#9D4EDD",
+    "brightPurple": "#F72585",
+    "brightCyan": "#6AF5FF",
+    "brightWhite": "#FFFFFF"
+}
