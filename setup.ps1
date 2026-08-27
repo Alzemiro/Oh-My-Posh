@@ -6,6 +6,8 @@
     .\setup.ps1
 .EXAMPLE
     .\setup.ps1 -SelfTest   # valida o merge de JSON sem tocar em nada da maquina
+.EXAMPLE
+    irm https://raw.githubusercontent.com/Alzemiro/Oh-My-Posh/main/setup.ps1 | iex
 #>
 [CmdletBinding()]
 param([switch]$SelfTest)
@@ -16,9 +18,23 @@ $FontFace   = 'MesloLGS Nerd Font'
 $FontSize   = 11
 $WtSettings = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
 $VsCodeSettings = "$env:APPDATA\Code\User\settings.json"
+$RawBase    = 'https://raw.githubusercontent.com/Alzemiro/Oh-My-Posh/main'
 
 function Write-Step($Message) { Write-Host "==> $Message" -ForegroundColor Cyan }
 function Write-Skip($Message) { Write-Host "    (salta) $Message" -ForegroundColor DarkGray }
+
+# Os ficheiros de config vem de junto do script; via `irm | iex` nao ha $PSScriptRoot,
+# entao descarregam-se do GitHub para o temp.
+function Get-Asset($Name) {
+    if ($PSScriptRoot -and (Test-Path "$PSScriptRoot\$Name")) { return "$PSScriptRoot\$Name" }
+    $dest = "$env:TEMP\omp-setup\$Name"
+    if (-not (Test-Path $dest)) {
+        New-Item -ItemType Directory -Path (Split-Path $dest -Parent) -Force | Out-Null
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        Invoke-WebRequest "$RawBase/$Name" -OutFile $dest -UseBasicParsing
+    }
+    return $dest
+}
 
 function Set-JsonProp($Object, $Name, $Value) {
     $Object | Add-Member -NotePropertyName $Name -NotePropertyValue $Value -Force
@@ -70,7 +86,7 @@ $VsCodeMutator = {
 # --- self-test ----------------------------------------------------------------
 
 if ($SelfTest) {
-    $scheme = Get-Content "$PSScriptRoot\wt-scheme.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+    $scheme = Get-Content (Get-Asset 'wt-scheme.json') -Raw -Encoding UTF8 | ConvertFrom-Json
     $mutator = Get-WtMutator $scheme
     $tmp = Join-Path $env:TEMP "wt-selftest-$PID.json"
 
@@ -122,17 +138,18 @@ $hasFont = $fontKeys | Where-Object { Test-Path $_ } |
 if ($hasFont) { Write-Skip 'ja instalada' } else { oh-my-posh font install meslo }
 
 Write-Step 'Tema'
-Copy-Config "$PSScriptRoot\config.json" "$env:USERPROFILE\.config\oh-my-posh\config.json"
+Copy-Config (Get-Asset 'config.json') "$env:USERPROFILE\.config\oh-my-posh\config.json"
 
 Write-Step 'Perfil PowerShell (5.1 e 7)'
 $docs = [Environment]::GetFolderPath('MyDocuments')   # respeita a redireccao do OneDrive
+$profileSource = Get-Asset 'Microsoft.PowerShell_profile.ps1'
 foreach ($shell in 'WindowsPowerShell', 'PowerShell') {
-    Copy-Config "$PSScriptRoot\Microsoft.PowerShell_profile.ps1" "$docs\$shell\Microsoft.PowerShell_profile.ps1"
+    Copy-Config $profileSource "$docs\$shell\Microsoft.PowerShell_profile.ps1"
 }
 
 Write-Step 'Windows Terminal'
 if (Test-Path $WtSettings) {
-    $scheme = Get-Content "$PSScriptRoot\wt-scheme.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+    $scheme = Get-Content (Get-Asset 'wt-scheme.json') -Raw -Encoding UTF8 | ConvertFrom-Json
     Merge-JsonFile -Path $WtSettings -Mutator (Get-WtMutator $scheme)
 } else {
     Write-Skip 'settings.json nao existe - abre o Windows Terminal uma vez e volta a correr'

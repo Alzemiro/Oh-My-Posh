@@ -4,6 +4,14 @@ Configuração do meu terminal (tema Dracula em duas linhas, Nerd Font, Windows 
 
 ## Numa máquina nova
 
+Sem clonar nada:
+
+```powershell
+irm https://raw.githubusercontent.com/Alzemiro/Oh-My-Posh/main/setup.ps1 | iex
+```
+
+Ou, se quiseres os ficheiros versionados na máquina (para editar o tema e fazer push):
+
 ```powershell
 git clone https://github.com/Alzemiro/Oh-My-Posh.git
 cd Oh-My-Posh
@@ -11,6 +19,8 @@ cd Oh-My-Posh
 ```
 
 Depois abre um terminal novo.
+
+O script usa os ficheiros de config que estiverem ao lado dele; se não existirem — o caso do `irm` — descarrega-os do GitHub para `%TEMP%\omp-setup`.
 
 ## O que o `setup.ps1` faz
 
